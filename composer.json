@@ -1,8 +1,8 @@
 {
-	"name": "Eyecatchup/GetGitStats",
+	"name": "eyecatchup/GetGitStats",
 	"description": "Give it a nice description!",
 	"keywords": [],
-	"homepage": "http://example.com",
+	"homepage": "https://github.com/eyecatchup/GetGitStats",
 	"license": "MIT",
 	"type": "library",
 	"minimum-stability": "dev",
@@ -25,12 +25,12 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Eyecatchup\\": "src/Eyecatchup/"
+			"Eyecatchup\\GetGitStats\\": "src/Eyecatchup/GetGitStats"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Eyecatchup\\Tests\\": "tests/"
+			"Eyecatchup\\GetGitStats\\Tests\\": "tests/Eyecatchup/GetGitStats/Tests"
 		}
 	},
 	"bin": [

@@ -1,24 +1,28 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: stephan.schmitz
- * Date: 10.02.2016
- * Time: 12:15
+ * This file is part of Eyecatchup/GetGitStats.
+ *
+ * @package    GetGitStats
+ * @link       https://github.com/eyecatchup/GetGitStats Project website
+ * @author     Stephan Schmitz <eyecatchup@gmail.com>
+ * @copyright  Copyright (C) 2016 Stephan Schmitz, https://eyecatchup.github.io/
+ * @license    http://eyecatchup.mit-license.org/ MIT License
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
-// Composer autoloading (run composer install in the package root first!).
+// Composer autoloading (run composer update in the package root first!).
 require_once realpath(__DIR__ . '/../vendor/autoload.php');
 
-use Eyecatchup\GetGitStats as GitStats;
+use Eyecatchup\GetGitStats\GetGitStats as GitStats;
 
 try {
     $localPaths = [
-            realpath('c:/PhpstormProjects/cobra-aw/cobra-aw'),
-            realpath('c:/PhpstormProjects/cobra-aw/cobra-aw/htdocs/typo3conf/ext/eft'),
-            realpath('c:/PhpstormProjects/cobra-aw/cobra-aw/htdocs/typo3conf/ext/shop'),
-            realpath('c:/PhpstormProjects/cobra-aw/cobra-aw/htdocs/typo3conf/ext/cobra_aw_template'),
-            realpath('c:/PhpstormProjects/cobra-aw/cobra-aw/htdocs/typo3conf/ext/congstar_base'),
-            realpath('c:/PhpstormProjects/cobra-aw/cobra-aw/htdocs/typo3conf/ext/congstar_configuration')
+            realpath('c:/PhpstormProjects/my-repo'),
+            realpath('c:/PhpstormProjects/another-repo'),
+            realpath('c:/PhpstormProjects/Eyecatchup/Seostats'),
+            realpath('c:/PhpstormProjects/Eyecatchup/GetGitStats')
     ];
 
     $logSince = "1 Jan, 2016";

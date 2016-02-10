@@ -1,12 +1,20 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: stephan.schmitz
- * Date: 10.02.2016
- * Time: 11:17
+ * This file is part of Eyecatchup/GetGitStats.
+ *
+ * @package    GetGitStats
+ * @link       https://github.com/eyecatchup/GetGitStats Project website
+ * @author     Stephan Schmitz <eyecatchup@gmail.com>
+ * @copyright  Copyright (C) 2016 Stephan Schmitz, https://eyecatchup.github.io/
+ * @license    http://eyecatchup.mit-license.org/ MIT License
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
-namespace Eyecatchup;
+
+namespace Eyecatchup\GetGitStats;
+
 
 class GetGitStats
 {
@@ -57,7 +65,7 @@ class GetGitStats
             return false;
         }
 
-        $cmd = 'cd ' . $this->localPath . ' && git log --shortstat --all --no-merges';
+        $cmd = 'cd ' . $this->localPath . ' && git log --shortstat --no-merges';
 
         if (0 !== $this->author) {
             $cmd .= sprintf(' --author="%s"', $this->author);
@@ -136,16 +144,14 @@ class GetGitStats
         $commitsByWeekday = [];
 
         foreach ($commits as $commit) {
-            $author = [];
-
             if (!isset($commitsByUser[$commit->author->email])) {
                 $commitsByUser[$commit->author->email] = [
-                        'name' => $commit->author->name,
-                        'email' => $commit->author->email,
-                        'commits_total' => (int) 1,
-                        'files_changed_total' => (int) $commit->changes->files,
-                        'insertions_total' => (int) $commit->changes->insertions,
-                        'deletions_total' => (int) $commit->changes->deletions
+                    'name' => $commit->author->name,
+                    'email' => $commit->author->email,
+                    'commits_total' => (int) 1,
+                    'files_changed_total' => (int) $commit->changes->files,
+                    'insertions_total' => (int) $commit->changes->insertions,
+                    'deletions_total' => (int) $commit->changes->deletions
                 ];
             }
             else {
@@ -157,10 +163,10 @@ class GetGitStats
 
             if (!isset($commitsByDate[$commit->commit_date->day])) {
                 $commitsByDate[$commit->commit_date->day] = [
-                        'commits_total' => (int) 1,
-                        'files_changed_total' => (int) $commit->changes->files,
-                        'insertions_total' => (int) $commit->changes->insertions,
-                        'deletions_total' => (int) $commit->changes->deletions
+                    'commits_total' => (int) 1,
+                    'files_changed_total' => (int) $commit->changes->files,
+                    'insertions_total' => (int) $commit->changes->insertions,
+                    'deletions_total' => (int) $commit->changes->deletions
                 ];
             }
             else {
@@ -172,10 +178,10 @@ class GetGitStats
 
             if (!isset($commitsByWeekday[$commit->commit_date->weekday])) {
                 $commitsByWeekday[$commit->commit_date->weekday] = [
-                        'commits_total' => (int) 1,
-                        'files_changed_total' => (int) $commit->changes->files,
-                        'insertions_total' => (int) $commit->changes->insertions,
-                        'deletions_total' => (int) $commit->changes->deletions
+                    'commits_total' => (int) 1,
+                    'files_changed_total' => (int) $commit->changes->files,
+                    'insertions_total' => (int) $commit->changes->insertions,
+                    'deletions_total' => (int) $commit->changes->deletions
                 ];
             }
             else {
@@ -196,16 +202,16 @@ class GetGitStats
         $commiters = [];
 
         foreach ($commitsByUser as $author => $data) {
-            $commitsByUser[$author]['commits_percent'] = round($commitsByUser[$author]['commits_total'] / ($counts->commits / 100), 2, PHP_ROUND_HALF_DOWN);
-            $commitsByUser[$author]['files_changed_percent'] = round($commitsByUser[$author]['files_changed_total'] / ($counts->files_changed / 100), 2, PHP_ROUND_HALF_DOWN);
-            $commitsByUser[$author]['insertions_percent'] = round($commitsByUser[$author]['insertions_total'] / ($counts->insertions / 100), 2, PHP_ROUND_HALF_DOWN);
-            $commitsByUser[$author]['deletions_percent'] = round($commitsByUser[$author]['deletions_total'] / ($counts->deletions / 100), 2, PHP_ROUND_HALF_DOWN);
+            $commitsByUser[$author]['commits_percent'] = $this->getPercent($counts->commits, $commitsByUser[$author]['commits_total']);
+            $commitsByUser[$author]['files_changed_percent'] = $this->getPercent($counts->files_changed, $commitsByUser[$author]['files_changed_total']);
+            $commitsByUser[$author]['insertions_percent'] = $this->getPercent($counts->insertions, $commitsByUser[$author]['insertions_total']);
+            $commitsByUser[$author]['deletions_percent'] = $this->getPercent($counts->deletions, $commitsByUser[$author]['deletions_total']);
 
             array_push($commiters, $commitsByUser[$author]);
             unset($commitsByUser[$author]);
         }
 
-        usort($commiters, ['Eyecatchup\GetGitStats', 'desc_by_commits_total']);
+        usort($commiters, ['Eyecatchup\GetGitStats\GetGitStats', 'desc_by_commits_total']);
 
         $commitsByUser = [];
 
@@ -229,13 +235,13 @@ class GetGitStats
             $tmp->changes->deletions->total = $user['deletions_total'];
             $tmp->changes->deletions->percent = $user['deletions_percent'];
             $tmp->changes->net = $user['insertions_total'] - $user['deletions_total'];
-            $tmp->changes->ratio = round(100 / ($user['deletions_total'] / ($user['insertions_total']  / 100)), 2, PHP_ROUND_HALF_DOWN);
+            $tmp->changes->ratio = $this->getInsertionsDeletionsRatio($user['insertions_total'], $user['deletions_total']);
 
             $commitsByUser []= $tmp;
         }
 
         $counts->net = $counts->insertions - $counts->deletions;
-        $counts->ratio = round(100 / ($counts->deletions / ($counts->insertions  / 100)), 2, PHP_ROUND_HALF_DOWN);
+        $counts->ratio = $this->getInsertionsDeletionsRatio($counts->insertions, $counts->deletions);
 
         $remote = $this->getGitRemote();
 
@@ -270,13 +276,13 @@ class GetGitStats
 
         foreach ($data->commits->by_date as $date => $data) {
             $out .= sprintf(
-                    "| %s | %s | %s | %s | %s | %s |" . PHP_EOL,
-                    $date,
-                    $data['commits_total'],
-                    $data['files_changed_total'],
-                    $data['insertions_total'],
-                    $data['deletions_total'],
-                    ($data['insertions_total'] - $data['deletions_total'])
+                "| %s | %s | %s | %s | %s | %s |" . PHP_EOL,
+                $date,
+                $data['commits_total'],
+                $data['files_changed_total'],
+                $data['insertions_total'],
+                $data['deletions_total'],
+                ($data['insertions_total'] - $data['deletions_total'])
             );
         }
 
@@ -292,13 +298,13 @@ class GetGitStats
 
         foreach ($data->commits->by_weekday as $weekday => $data) {
             $out .= sprintf(
-                    "| %s | %s | %s | %s | %s | %s |" . PHP_EOL,
-                    $weekday,
-                    $data['commits_total'],
-                    $data['files_changed_total'],
-                    $data['insertions_total'],
-                    $data['deletions_total'],
-                    ($data['insertions_total'] - $data['deletions_total'])
+                "| %s | %s | %s | %s | %s | %s |" . PHP_EOL,
+                $weekday,
+                $data['commits_total'],
+                $data['files_changed_total'],
+                $data['insertions_total'],
+                $data['deletions_total'],
+                ($data['insertions_total'] - $data['deletions_total'])
             );
         }
 
@@ -312,29 +318,29 @@ class GetGitStats
         $out  = "| Author | Commits (total) | Commits (%) | Files changed (total) | Files changed (%) | Insertions (total) | Insertions (%) | Deletions (total) | Deletions (%) | Lines net (Ins. - Del.) | Ins./Del. Ratio (1:n) |" . PHP_EOL;
         $out .= "|--------|----------------:|------------:|----------------------:|------------------:|-------------------:|---------------:|------------------:|--------------:|------------------------:|----------------------:|" . PHP_EOL;
         $out .= sprintf(
-                "| **TOTAL** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** |" . PHP_EOL,
-                $data->totals->commits, "100 %",
-                $data->totals->files_changed, "100 %",
-                $data->totals->insertions, "100 %",
-                $data->totals->deletions, "100 %",
-                $data->totals->net,
-                '1 : ' . $data->totals->ratio
+            "| **TOTAL** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** |" . PHP_EOL,
+            $data->totals->commits, "100 %",
+            $data->totals->files_changed, "100 %",
+            $data->totals->insertions, "100 %",
+            $data->totals->deletions, "100 %",
+            $data->totals->net,
+            '1 : ' . $data->totals->ratio
         );
 
         foreach ($data->commits->by_user as $commiter) {
             $out .= sprintf(
-                    "| %s | %s | %s | %s  | %s | %s | %s | %s | %s | %s | %s |" . PHP_EOL,
-                    $commiter->author->name,
-                    $commiter->commits->total,
-                    $commiter->commits->percent . " %",
-                    $commiter->changes->files->total,
-                    $commiter->changes->files->percent . " %",
-                    $commiter->changes->insertions->total,
-                    $commiter->changes->insertions->percent . " %",
-                    $commiter->changes->deletions->total,
-                    $commiter->changes->deletions->percent . " %",
-                    $commiter->changes->net,
-                    "1 : " . $commiter->changes->ratio
+                "| %s | %s | %s | %s  | %s | %s | %s | %s | %s | %s | %s |" . PHP_EOL,
+                $commiter->author->name,
+                $commiter->commits->total,
+                $commiter->commits->percent . " %",
+                $commiter->changes->files->total,
+                $commiter->changes->files->percent . " %",
+                $commiter->changes->insertions->total,
+                $commiter->changes->insertions->percent . " %",
+                $commiter->changes->deletions->total,
+                $commiter->changes->deletions->percent . " %",
+                $commiter->changes->net,
+                "1 : " . $commiter->changes->ratio
             );
         }
 
@@ -347,33 +353,56 @@ class GetGitStats
 
         $out  = "<table><thead><tr><th>Author</th><th>Commits (total)</th><th>Commits (%)</th><th>Files changed (total)</th><th>Files changed (%)</th><th>Insertions (total)</th><th>Insertions (%)</th><th>Deletions (total)</th><th>Deletions (%)</th><th>Lines net (Ins. - Del.)</th><th>Ins./Del. Ratio (1:n)</th></tr></thead><tbody>" . PHP_EOL;
         $out .= sprintf(
-                "<tr><td><strong>TOTAL</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td></tr>" . PHP_EOL,
-                $data->totals->commits, "100 %",
-                $data->totals->files_changed, "100 %",
-                $data->totals->insertions, "100 %",
-                $data->totals->deletions, "100 %",
-                $data->totals->net,
-                '1 : ' . $data->totals->ratio
+            "<tr><td><strong>TOTAL</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td></tr>" . PHP_EOL,
+            $data->totals->commits, "100 %",
+            $data->totals->files_changed, "100 %",
+            $data->totals->insertions, "100 %",
+            $data->totals->deletions, "100 %",
+            $data->totals->net,
+            '1 : ' . $data->totals->ratio
         );
 
         foreach ($data->commits->by_user as $commiter) {
             $out .= sprintf(
-                    "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" . PHP_EOL,
-                    $commiter->author->name,
-                    $commiter->commits->total,
-                    $commiter->commits->percent . " %",
-                    $commiter->changes->files->total,
-                    $commiter->changes->files->percent . " %",
-                    $commiter->changes->insertions->total,
-                    $commiter->changes->insertions->percent . " %",
-                    $commiter->changes->deletions->total,
-                    $commiter->changes->deletions->percent . " %",
-                    $commiter->changes->net,
-                    "1 : " . $commiter->changes->ratio
+                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" . PHP_EOL,
+                $commiter->author->name,
+                $commiter->commits->total,
+                $commiter->commits->percent . " %",
+                $commiter->changes->files->total,
+                $commiter->changes->files->percent . " %",
+                $commiter->changes->insertions->total,
+                $commiter->changes->insertions->percent . " %",
+                $commiter->changes->deletions->total,
+                $commiter->changes->deletions->percent . " %",
+                $commiter->changes->net,
+                "1 : " . $commiter->changes->ratio
             );
         }
 
         return $out . '</tbody></table>';
+    }
+
+    function getGitRemote()
+    {
+        $tty = shell_exec('cd ' . $this->localPath . ' && git remote -v |grep push |awk \'{printf "%s %s", $1, $2}\' -');
+        $tmp = explode(" ", $tty);
+        $tmp2 = explode("/", $tmp[1]);
+
+        return (object) [
+            'repo_name' => end($tmp2),
+            'remote_name' => $tmp[0],
+            'remote_url' => $tmp[1]
+        ];
+    }
+
+    function getInsertionsDeletionsRatio($insertions, $deletions)
+    {
+        return round(100 / ((int) $deletions / ((int) $insertions  / 100)), 2, PHP_ROUND_HALF_DOWN);
+    }
+
+    function getPercent($sum, $int)
+    {
+        return round((int) $int / ((int) $sum / 100), 2, PHP_ROUND_HALF_DOWN);
     }
 
     function getDay($datestr)
@@ -384,19 +413,6 @@ class GetGitStats
     function getWeekday($datestr)
     {
         return (string) date_format(date_create($datestr), "D");
-    }
-
-    function getGitRemote()
-    {
-        $fetch = shell_exec('cd ' . $this->localPath . ' && git remote -v |grep push |awk \'{printf "%s %s", $1, $2}\' -');
-        $tmp = explode(" ", $fetch);
-        $tmp2 = explode("/", $tmp[1]);
-
-        return (object) [
-                'repo_name' => end($tmp2),
-                'remote_name' => $tmp[0],
-                'remote_url' => $tmp[1]
-        ];
     }
 
     function getLogSince()
