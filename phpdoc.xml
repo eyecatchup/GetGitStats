@@ -1,0 +1,33 @@
+<phpdocumentor>
+    <parser>
+        <default-package-name>GetGitStats</default-package-name>
+        <encoding>utf-8</encoding>
+        <target>docs</target>
+        <markers>
+            <item>TODO</item>
+            <item>FIXME</item>
+        </markers>
+        <extensions>
+            <extension>php</extension>
+        </extensions>
+        <visibility/>
+    </parser>
+    <files>
+        <directory>src/*</directory>
+        <ignore-hidden>on</ignore-hidden>
+        <ignore-symlinks>on</ignore-symlinks>
+    </files>
+    <transformer>
+        <target>docs</target>
+    </transformer>
+    <logging>
+        <level>info</level>
+        <paths>
+            <default>build/logs/docs/{DATE}.log</default>
+            <errors>build/logs/docs/{DATE}.errors.log</errors>
+        </paths>
+    </logging>
+    <transformations>
+        <template name="clean"/>
+    </transformations>
+</phpdocumentor>
