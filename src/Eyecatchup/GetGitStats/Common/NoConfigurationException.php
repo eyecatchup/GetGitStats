@@ -16,7 +16,7 @@
 namespace Eyecatchup\GetGitStats\Common;
 
 
-class NoGitRepositoryInDirectoryException extends GetGitStatsException
+class NoConfigurationException extends GetGitStatsException
 {
 
 }

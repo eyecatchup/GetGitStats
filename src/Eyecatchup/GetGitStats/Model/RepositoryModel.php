@@ -30,7 +30,7 @@ class RepositoryModel
         $this->setDefaults($properties);
     }
 
-    public function commitsByAuthor()
+    public function commitsByAuthor($data)
     {
         $html = 'author';
         /*if ($this->defaults['templateRoot']) {
@@ -42,17 +42,17 @@ class RepositoryModel
         return (string) $html;
     }
 
-    public function commitsByDate($str)
+    public function commitsByDate($data)
     {
         return (string) 'date';
     }
 
-    public function commitsByWeekday($str)
+    public function commitsByWeekday($data)
     {
         return (string) 'weekday';
     }
 
-    public function getComposedString($str)
+    public function getComposedString()
     {
         return (string) '123';
     }

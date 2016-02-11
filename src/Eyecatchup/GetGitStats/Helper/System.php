@@ -16,7 +16,7 @@
 namespace Eyecatchup\GetGitStats\Helper;
 
 
-use Eyecatchup\GetGitStats\Common\NoGitRepositoryInDirectoryException;
+use Eyecatchup\GetGitStats\Common\NoGitRepositoryInPathException;
 
 class System
 {
@@ -26,12 +26,12 @@ class System
      * @param string $path The local path to a Git repository
      *
      * @return bool
-     * @throws NoGitRepositoryInDirectoryException
+     * @throws NoGitRepositoryInPathException
      */
-    protected static function isGitDir($path)
+    public static function isGitDir($path)
     {
         if (!file_exists(realpath($path . DIRECTORY_SEPARATOR . '.git' . DIRECTORY_SEPARATOR . 'config'))) {
-            throw new NoGitRepositoryInDirectoryException('No .git directory in ' . $path);
+            throw new NoGitRepositoryInPathException(sprintf("No '.git' directory in path '%s'", $path));
         }
 
         return true;
@@ -44,7 +44,7 @@ class System
      *
      * @return array Repo name, remote name and remote URL
      */
-    protected static function getGitRemote($path = '.')
+    public static function getGitRemote($path = '.')
     {
         $tty = shell_exec('cd ' . $path . ' && git remote -v |grep push |awk \'{printf "%s %s", $1, $2}\' -');
         $tmp = explode(" ", $tty);

@@ -25,7 +25,7 @@ class Arrays
      * @param array $arr2 Another array item.
      * @return integer Returns an integer representing the sorting weight.
      */
-    private static function desc_by_commits_total($arr1, $arr2)
+    public static function desc_by_commits_total($arr1, $arr2)
     {
         if ($arr1['commits_total'] == $arr2['commits_total']) {
             return 0;

@@ -16,10 +16,35 @@
 namespace Eyecatchup\GetGitStats\Helper;
 
 
+use Eyecatchup\GetGitStats\Common\NoConfigurationException;
+use Eyecatchup\GetGitStats\Common\InvalidConfigurationException;
+
 class Validator
 {
     /**
-     * Validate the Dependency-Injection configuration array.
+     * Validate the Dependency-Injection configuration array length.
+     *
+     * @param array $array
+     *
+     * @void
+     * @throws NoConfigurationException
+     * @throws InvalidConfigurationException
+     */
+    public static function configLength(array $array)
+    {
+        if (0 === sizeof($array)) {
+            throw new NoConfigurationException(
+                    "Missing configuration; the 'local_path' option is required / must be set." .
+                    "See the `parse()` documentation for details.");
+        }
+        elseif (4 < sizeof($array)) {
+            throw new InvalidConfigurationException(
+                    'Invalid configuration; too many options. You cannot set more than 4 options.');
+        }
+    }
+
+    /**
+     * Validate the Dependency-Injection configuration array contents.
      *
      * @param array $array Dependency-Injection configuration
      *
@@ -47,7 +72,7 @@ class Validator
      *
      * @return array Valid DI-config items
      */
-    private static function validConfig()
+    public static function validConfig()
     {
         return [
             'log_since',

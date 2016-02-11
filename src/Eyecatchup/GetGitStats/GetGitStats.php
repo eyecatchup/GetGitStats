@@ -49,6 +49,7 @@ class GetGitStats
      * Constructor.
      *
      * @param array $config Dependency-Injection configuration
+     *
      * @void
      */
     public function __construct(array $config = [])
@@ -61,20 +62,21 @@ class GetGitStats
             $this->container->get('repo')
         );
 
-        $this->setOutput(new Clients\StringOutput);
+        $this->parseGitlog();
     }
 
     /**
      * Update the DI container config and the domain model instance.
      *
+     * @todo Add check for, and exception if, new local path === old local path
      * @param array $config Dependency-Injection configuration
+     *
      * @void
      */
-    public function parse(array $config = [])
+    public function parse(array $config)
     {
-        /**
-         * @TODO: Add check for, and exception if, new local path === old local path
-         */
+        Helper\Validator::configLength($config);
+
         $this->container->configure(
             Helper\Validator::config($config)
         );
@@ -87,7 +89,7 @@ class GetGitStats
             'repo', $this->getRepositoryModel()
         );
 
-        $this->setOutput(new Clients\StringOutput);
+        $this->parseGitlog();
     }
 
     /**
@@ -103,7 +105,7 @@ class GetGitStats
         }
 
         return $this->output->load(
-            $this->repo->commitsByAuthor()
+            $this->repo->commitsByAuthor([])
         );
     }
 
@@ -120,7 +122,7 @@ class GetGitStats
         }
 
         return $this->output->load(
-            $this->repo->commitsByDate()
+            $this->repo->commitsByDate([])
         );
     }
 
@@ -137,7 +139,7 @@ class GetGitStats
         }
 
         return $this->output->load(
-            $this->repo->commitsByWeekday()
+            $this->repo->commitsByWeekday([])
         );
     }
 
@@ -186,6 +188,8 @@ class GetGitStats
 
     protected function parseGitlog()
     {
+        $this->setOutput(new Clients\StringOutput);
+
         $cmd = 'cd ' . $this->localPath . ' && git log --shortstat --no-merges';
 
         if (0 !== $this->author) {
