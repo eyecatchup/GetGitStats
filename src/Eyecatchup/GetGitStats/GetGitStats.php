@@ -57,28 +57,35 @@ class GetGitStats
             Helper\Validator::config($config)
         );
 
-        $this->repo = $this->container->get('repo');
+        $this->setRepositoryModel(
+            $this->container->get('repo')
+        );
+
+        $this->setOutput(new Clients\StringOutput);
     }
 
     /**
-     * (Re)Set Dependency-Injection configuration and (re)create the domain model instance.
+     * Update the DI container config and the domain model instance.
      *
      * @param array $config Dependency-Injection configuration
      * @void
      */
-    public function configure(array $config = [])
+    public function parse(array $config = [])
     {
-        if (0 < sizeof($config)) {
-            $this->container->configure(
-                Helper\Validator::config($config)
-            );
+        /**
+         * @TODO: Add check for, and exception if, new local path === old local path
+         */
+        $this->container->configure(
+            Helper\Validator::config($config)
+        );
 
-            $this->setRepositoryModel(Factory\RepositoryFactory::create(
-                $this->container->get('repoDefaults')
-            ));
+        $this->setRepositoryModel(Factory\RepositoryFactory::create(
+            $this->container->get('repoDefaults')
+        ));
 
-            $this->container->set('repo', $this->repo);
-        }
+        $this->container->set(
+            'repo', $this->getRepositoryModel()
+        );
 
         $this->setOutput(new Clients\StringOutput);
     }
@@ -91,7 +98,7 @@ class GetGitStats
      */
     public function getCommitsByAuthor()
     {
-        if ($this->repo === null) {
+        if ($this->getRepositoryModel() === null) {
             throw new GetGitStatsException('Nothing done yet! Use createDocument first.');
         }
 
@@ -108,7 +115,7 @@ class GetGitStats
      */
     public function getCommitsByDate()
     {
-        if ($this->repo === null) {
+        if ($this->getRepositoryModel() === null) {
             throw new GetGitStatsException('Nothing done yet! Use createDocument first.');
         }
 
@@ -125,7 +132,7 @@ class GetGitStats
      */
     public function getCommitsByWeekday()
     {
-        if ($this->repo === null) {
+        if ($this->getRepositoryModel() === null) {
             throw new GetGitStatsException('Nothing done yet! Use createDocument first.');
         }
 

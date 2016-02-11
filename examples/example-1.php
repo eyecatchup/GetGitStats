@@ -20,28 +20,16 @@ use Eyecatchup\GetGitStats\GetGitStats as GitStats;
 try {
     $opts = [
         'path' => [
-            realpath('C:\xampp\htdocs\cobra_aw_template')
+            realpath('C:\xampp\htdocs\repo_a')
         ],
-        'log_since' => '1 Jan, 2016',
-        #'log_until' => '2 Jan, 2016',
-        #'log_author' => 'Stephan Schmitz'
+        'log_since' => '1 Jan, 2016'
     ];
 
-    #$gitstats = new GitStats($opts);
-    $gitstats = new GitStats;
+    $gitstats = new GitStats($opts);
 
-    $gitstats->configure($opts);
+    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $opts['since'], $opts['path'][0]);
 
-    #$gitstats->setOutput(new CSVOutput);
-    #$gitstats->setOutput(new HTMLOutput);
-    #$gitstats->setOutput(new JsonOutput);
-    #$gitstats->setOutput(new MarkdownOutput);
-
-    printf("##### Commits seit %s in %s" . PHP_EOL . PHP_EOL, $opts['since'], $opts['path'][0]);
-
-    print $gitstats->getCommitsByAuthor() . PHP_EOL;
-    #print $gitstats->getCommitsByDate() . PHP_EOL;
-    #print $gitstats->getCommitsByWeekday() . PHP_EOL;
+    print $gitstats->getCommitsByWeekday() . PHP_EOL;
 }
 catch(\Exception $e) {
     print $e->getMessage();

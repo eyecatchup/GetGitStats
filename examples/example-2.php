@@ -18,29 +18,48 @@ require_once realpath(__DIR__ . '/../vendor/autoload.php');
 use Eyecatchup\GetGitStats\GetGitStats as GitStats;
 
 try {
-    $localPaths = [
-            realpath('c:/PhpstormProjects/my-repo'),
-            realpath('c:/PhpstormProjects/another-repo'),
-            realpath('c:/PhpstormProjects/Eyecatchup/Seostats'),
-            realpath('c:/PhpstormProjects/Eyecatchup/GetGitStats')
+    $gitstats = new GitStats;
+
+    $opts = [
+        'path' => [
+             realpath('C:\xampp\htdocs\repo_a')
+        ],
+        'log_author' => 'Stephan Schmitz'
     ];
 
-    $logSince = "1 Jan, 2016";
+    $gitstats->parse($opts);
 
-    $logAuthor = "Stephan Schmitz";
+    #$gitstats->setOutput(new CSVOutput);
+    #$gitstats->setOutput(new HTMLOutput);
+    #$gitstats->setOutput(new JsonOutput);
+    #$gitstats->setOutput(new MarkdownOutput);
 
-    foreach ($localPaths as $localRepoPath) {
-        $gitstats = new GitStats($localRepoPath, $logSince, 0, $logAuthor);
+    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $opts['since'], $opts['path'][0]);
 
-        if (false !== $gitstats) {
-            printf("<h5>Commits seit %s in %s</h5>", $logSince, $localRepoPath);
+    print $gitstats->getCommitsByAuthor() . PHP_EOL;
+    #print $gitstats->getCommitsByDate() . PHP_EOL;
+    #print $gitstats->getCommitsByWeekday() . PHP_EOL;
 
-            print $gitstats->renderHtmlCommitsyByUser() . PHP_EOL;
-            #print $gitstats->renderMarkdownCommitsByUser() . PHP_EOL;
-            #print $gitstats->renderMarkdownCommitsByDate() . PHP_EOL;
-            #print $gitstats->renderMarkdownCommitsByWeekday() . PHP_EOL;
-        }
-    }
+    $newOpts = [
+        'path' => [
+             realpath('C:\xampp\htdocs\repo_b')
+        ],
+        'log_since' => '1 Jan, 2016',
+        'log_until' => '31 Jan, 2016'
+    ];
+
+    $gitstats->parse($newOpts);
+
+    #$gitstats->setOutput(new CSVOutput);
+    #$gitstats->setOutput(new HTMLOutput);
+    #$gitstats->setOutput(new JsonOutput);
+    #$gitstats->setOutput(new MarkdownOutput);
+
+    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $newOpts['since'], $newOpts['path'][0]);
+
+    print $gitstats->getCommitsByAuthor() . PHP_EOL;
+    #print $gitstats->getCommitsByDate() . PHP_EOL;
+    #print $gitstats->getCommitsByWeekday() . PHP_EOL;
 }
 catch(\Exception $e) {
     print $e->getMessage();
