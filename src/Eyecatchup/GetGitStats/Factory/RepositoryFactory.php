@@ -13,12 +13,15 @@
  */
 
 
-namespace Eyecatchup\GetGitStats\Tests;
-
-use Eyecatchup\GetGitStats;
+namespace Eyecatchup\GetGitStats\Factory;
 
 
-class GetGitStatsTest extends \PHPUnit_Framework_TestCase
+use Eyecatchup\GetGitStats\Model\RepositoryModel;
+
+class RepositoryFactory
 {
-
+    public static function create(array $properties)
+    {
+        return new RepositoryModel($properties);
+    }
 }

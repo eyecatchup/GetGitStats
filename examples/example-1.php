@@ -18,20 +18,30 @@ require_once realpath(__DIR__ . '/../vendor/autoload.php');
 use Eyecatchup\GetGitStats\GetGitStats as GitStats;
 
 try {
-    $localRepoPath = realpath('C:\xampp\htdocs\cobra_aw_template');
+    $opts = [
+        'path' => [
+            realpath('C:\xampp\htdocs\cobra_aw_template')
+        ],
+        'log_since' => '1 Jan, 2016',
+        #'log_until' => '2 Jan, 2016',
+        #'log_author' => 'Stephan Schmitz'
+    ];
 
-    $logSince = "1 Jan, 2016";
+    #$gitstats = new GitStats($opts);
+    $gitstats = new GitStats;
 
-    $gitstats = new GitStats($localRepoPath, $logSince);
+    $gitstats->configure($opts);
 
-    if (false !== $gitstats) {
-        printf("##### Commits seit %s in %s" . PHP_EOL . PHP_EOL, $logSince, $localRepoPath);
+    #$gitstats->setOutput(new CSVOutput);
+    #$gitstats->setOutput(new HTMLOutput);
+    #$gitstats->setOutput(new JsonOutput);
+    #$gitstats->setOutput(new MarkdownOutput);
 
-        #print $gitstats->renderHtmlCommitsyByUser() . PHP_EOL;
-        print $gitstats->renderMarkdownCommitsByUser() . PHP_EOL;
-        #print $gitstats->renderMarkdownCommitsByDate() . PHP_EOL;
-        #print $gitstats->renderMarkdownCommitsByWeekday() . PHP_EOL;
-    }
+    printf("##### Commits seit %s in %s" . PHP_EOL . PHP_EOL, $opts['since'], $opts['path'][0]);
+
+    print $gitstats->getCommitsByAuthor() . PHP_EOL;
+    #print $gitstats->getCommitsByDate() . PHP_EOL;
+    #print $gitstats->getCommitsByWeekday() . PHP_EOL;
 }
 catch(\Exception $e) {
     print $e->getMessage();

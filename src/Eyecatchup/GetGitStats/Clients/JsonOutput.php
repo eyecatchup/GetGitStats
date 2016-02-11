@@ -13,12 +13,15 @@
  */
 
 
-namespace Eyecatchup\GetGitStats\Tests;
-
-use Eyecatchup\GetGitStats;
+namespace Eyecatchup\GetGitStats\Clients;
 
 
-class GetGitStatsTest extends \PHPUnit_Framework_TestCase
+use Eyecatchup\GetGitStats\Interfaces\OutputInterface;
+
+class JsonOutput implements OutputInterface
 {
-
+    public function load($data)
+    {
+        return json_encode($data);
+    }
 }

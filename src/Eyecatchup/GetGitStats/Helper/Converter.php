@@ -13,12 +13,10 @@
  */
 
 
-namespace Eyecatchup\GetGitStats\Tests;
-
-use Eyecatchup\GetGitStats;
+namespace Eyecatchup\GetGitStats\Helper;
 
 
-class GetGitStatsTest extends \PHPUnit_Framework_TestCase
+class Converter
 {
 
 }

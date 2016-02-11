@@ -16,55 +16,169 @@
 namespace Eyecatchup\GetGitStats;
 
 
+use Eyecatchup\GetGitStats\Common\GetGitStatsException;
+use Eyecatchup\GetGitStats\DI\Container;
+use Eyecatchup\GetGitStats\DI\Container\Standard as StandardContainer;
+use Eyecatchup\GetGitStats\Interfaces\OutputInterface;
+
 class GetGitStats
 {
-    protected $repo;
-    protected $commits;
-    protected $commitsReconstituted;
-    protected $logSince = 0;
-    protected $logUntil = 0;
-    protected $author = 0;
-    protected $localPath;
-
     /**
-     * @param string $repo_path The local path to a Git repository.
-     * @param mixed $since An optional start date to limit the logs.
-     * @param mixed $until An optional end date to limit the logs.
-     * @param mixed $author An optional author to limit the logs.
-     */
-    public function __construct($repo_path = '.', $since = 0, $until = 0, $author = 0)
-    {
-        $this->localPath = realpath($repo_path);
-        $this->logSince = $since;
-        $this->logUntil = $until;
-        $this->author = $author;
-
-        $this->getCommitsFromLocalRepo();
-    }
-
-    /**
-     * Helper function for PHP's usort to compare two extension keys by their alphabetical order.
+     *  Dependency-Injection container.
      *
-     * @param array $arr1 An array item.
-     * @param array $arr2 Another array item.
-     * @return integer Returns an integer representing the sorting weight.
+     *  @var DI\Container
      */
-    private static function desc_by_commits_total($arr1, $arr2)
-    {
-        if ($arr1['commits_total'] == $arr2['commits_total']) {
-            return 0;
-        }
+    protected $container = null;
 
-        return ($arr1['commits_total'] > $arr2['commits_total']) ? -1 : +1;
+    /**
+     *  Any valid output interface implementation.
+     *
+     *  @var Clients\StringOutput | Clients\JsonOutput
+     */
+    private $output;
+
+    /**
+     *  Git repository domain model representation.
+     *
+     *  @var Model\RepositoryModel
+     */
+    private $repo;
+    #protected $repo;
+
+    /**
+     * Constructor.
+     *
+     * @param array $config Dependency-Injection configuration
+     * @void
+     */
+    public function __construct(array $config = [])
+    {
+        $this->container = new StandardContainer(
+            Helper\Validator::config($config)
+        );
+
+        $this->repo = $this->container->get('repo');
     }
 
-    protected function getCommitsFromLocalRepo()
+    /**
+     * (Re)Set Dependency-Injection configuration and (re)create the domain model instance.
+     *
+     * @param array $config Dependency-Injection configuration
+     * @void
+     */
+    public function configure(array $config = [])
     {
-        if (!file_exists(realpath($this->localPath . DIRECTORY_SEPARATOR . '.git' . DIRECTORY_SEPARATOR . 'config'))) {
-            die("No git repo!");
-            return false;
+        if (0 < sizeof($config)) {
+            $this->container->configure(
+                Helper\Validator::config($config)
+            );
+
+            $this->setRepositoryModel(Factory\RepositoryFactory::create(
+                $this->container->get('repoDefaults')
+            ));
+
+            $this->container->set('repo', $this->repo);
         }
 
+        $this->setOutput(new Clients\StringOutput);
+    }
+
+    /**
+     * Get a reconstituted string representation of the commit data in buffer.
+     *
+     * @return string String-representation of the reconstituted commit data
+     * @throws GetGitStatsException
+     */
+    public function getCommitsByAuthor()
+    {
+        if ($this->repo === null) {
+            throw new GetGitStatsException('Nothing done yet! Use createDocument first.');
+        }
+
+        return $this->output->load(
+            $this->repo->commitsByAuthor()
+        );
+    }
+
+    /**
+     * Get a reconstituted string representation of the commit data in buffer.
+     *
+     * @return string String-representation of the reconstituted commit data
+     * @throws GetGitStatsException
+     */
+    public function getCommitsByDate()
+    {
+        if ($this->repo === null) {
+            throw new GetGitStatsException('Nothing done yet! Use createDocument first.');
+        }
+
+        return $this->output->load(
+            $this->repo->commitsByDate()
+        );
+    }
+
+    /**
+     * Get a reconstituted string representation of the commit data in buffer.
+     *
+     * @return string String-representation of the reconstituted commit data
+     * @throws GetGitStatsException
+     */
+    public function getCommitsByWeekday()
+    {
+        if ($this->repo === null) {
+            throw new GetGitStatsException('Nothing done yet! Use createDocument first.');
+        }
+
+        return $this->output->load(
+            $this->repo->commitsByWeekday()
+        );
+    }
+
+    /**
+     * Get the internal Dependency-Injection container.
+     *
+     * @return DI\Container DI-container
+     */
+    public function container()
+    {
+        return $this->container;
+    }
+
+    /**
+     * Get the domain model representation of the data in buffer.
+     *
+     * @return Model\RepositoryModel The domain model
+     */
+    public function getRepositoryModel()
+    {
+        return $this->repo;
+    }
+
+    /**
+     * (Re-)Set the domain model instance.
+     *
+     * @param Model\RepositoryModel $model The domain model
+     * @void
+     */
+    private function setRepositoryModel(Model\RepositoryModel $model)
+    {
+        $this->repo = $model;
+    }
+
+    /**
+     * Set the output format for the data in buffer.
+     *
+     * @param OutputInterface $outputType Output interface
+     * @void
+     */
+    public function setOutput(OutputInterface $outputType)
+    {
+        $this->output = $outputType;
+    }
+
+
+    protected function parseGitlog()
+    {
         $cmd = 'cd ' . $this->localPath . ' && git log --shortstat --no-merges';
 
         if (0 !== $this->author) {
@@ -211,7 +325,7 @@ class GetGitStats
             unset($commitsByUser[$author]);
         }
 
-        usort($commiters, ['Eyecatchup\GetGitStats\GetGitStats', 'desc_by_commits_total']);
+        usort($commiters, ['Eyecatchup\GetGitStats\Helper\Arrays', 'desc_by_commits_total']);
 
         $commitsByUser = [];
 
@@ -267,133 +381,6 @@ class GetGitStats
         return true;
     }
 
-    function renderMarkdownCommitsByDate()
-    {
-        $data = $this->commits;
-
-        $out  = "| Date | Commits (total) | Files changed (total) | Insertions (total) | Deletions (total) | Lines net (Ins. - Del.) |" . PHP_EOL;
-        $out .= "|------|----------------:|----------------------:|-------------------:|------------------:|------------------------:|" . PHP_EOL;
-
-        foreach ($data->commits->by_date as $date => $data) {
-            $out .= sprintf(
-                "| %s | %s | %s | %s | %s | %s |" . PHP_EOL,
-                $date,
-                $data['commits_total'],
-                $data['files_changed_total'],
-                $data['insertions_total'],
-                $data['deletions_total'],
-                ($data['insertions_total'] - $data['deletions_total'])
-            );
-        }
-
-        return $out;
-    }
-
-    function renderMarkdownCommitsByWeekday()
-    {
-        $data = $this->commits;
-
-        $out  = "| Day | Commits (total) | Files changed (total) | Insertions (total) | Deletions (total) | Lines net (Ins. - Del.) |" . PHP_EOL;
-        $out .= "|-----|----------------:|----------------------:|-------------------:|------------------:|------------------------:|" . PHP_EOL;
-
-        foreach ($data->commits->by_weekday as $weekday => $data) {
-            $out .= sprintf(
-                "| %s | %s | %s | %s | %s | %s |" . PHP_EOL,
-                $weekday,
-                $data['commits_total'],
-                $data['files_changed_total'],
-                $data['insertions_total'],
-                $data['deletions_total'],
-                ($data['insertions_total'] - $data['deletions_total'])
-            );
-        }
-
-        return $out;
-    }
-
-    function renderMarkdownCommitsByUser()
-    {
-        $data = $this->commits;
-
-        $out  = "| Author | Commits (total) | Commits (%) | Files changed (total) | Files changed (%) | Insertions (total) | Insertions (%) | Deletions (total) | Deletions (%) | Lines net (Ins. - Del.) | Ins./Del. Ratio (1:n) |" . PHP_EOL;
-        $out .= "|--------|----------------:|------------:|----------------------:|------------------:|-------------------:|---------------:|------------------:|--------------:|------------------------:|----------------------:|" . PHP_EOL;
-        $out .= sprintf(
-            "| **TOTAL** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** | **%s** |" . PHP_EOL,
-            $data->totals->commits, "100 %",
-            $data->totals->files_changed, "100 %",
-            $data->totals->insertions, "100 %",
-            $data->totals->deletions, "100 %",
-            $data->totals->net,
-            '1 : ' . $data->totals->ratio
-        );
-
-        foreach ($data->commits->by_user as $commiter) {
-            $out .= sprintf(
-                "| %s | %s | %s | %s  | %s | %s | %s | %s | %s | %s | %s |" . PHP_EOL,
-                $commiter->author->name,
-                $commiter->commits->total,
-                $commiter->commits->percent . " %",
-                $commiter->changes->files->total,
-                $commiter->changes->files->percent . " %",
-                $commiter->changes->insertions->total,
-                $commiter->changes->insertions->percent . " %",
-                $commiter->changes->deletions->total,
-                $commiter->changes->deletions->percent . " %",
-                $commiter->changes->net,
-                "1 : " . $commiter->changes->ratio
-            );
-        }
-
-        return $out;
-    }
-
-    function renderHtmlCommitsyByUser()
-    {
-        $data = $this->commits;
-
-        $out  = "<table><thead><tr><th>Author</th><th>Commits (total)</th><th>Commits (%)</th><th>Files changed (total)</th><th>Files changed (%)</th><th>Insertions (total)</th><th>Insertions (%)</th><th>Deletions (total)</th><th>Deletions (%)</th><th>Lines net (Ins. - Del.)</th><th>Ins./Del. Ratio (1:n)</th></tr></thead><tbody>" . PHP_EOL;
-        $out .= sprintf(
-            "<tr><td><strong>TOTAL</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td><td><strong>%s</strong></td></tr>" . PHP_EOL,
-            $data->totals->commits, "100 %",
-            $data->totals->files_changed, "100 %",
-            $data->totals->insertions, "100 %",
-            $data->totals->deletions, "100 %",
-            $data->totals->net,
-            '1 : ' . $data->totals->ratio
-        );
-
-        foreach ($data->commits->by_user as $commiter) {
-            $out .= sprintf(
-                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" . PHP_EOL,
-                $commiter->author->name,
-                $commiter->commits->total,
-                $commiter->commits->percent . " %",
-                $commiter->changes->files->total,
-                $commiter->changes->files->percent . " %",
-                $commiter->changes->insertions->total,
-                $commiter->changes->insertions->percent . " %",
-                $commiter->changes->deletions->total,
-                $commiter->changes->deletions->percent . " %",
-                $commiter->changes->net,
-                "1 : " . $commiter->changes->ratio
-            );
-        }
-
-        return $out . '</tbody></table>';
-    }
-
-    function getGitRemote()
-    {
-        $tty = shell_exec('cd ' . $this->localPath . ' && git remote -v |grep push |awk \'{printf "%s %s", $1, $2}\' -');
-        $tmp = explode(" ", $tty);
-        $tmp2 = explode("/", $tmp[1]);
-
-        return (object) [
-            'repo_name' => end($tmp2),
-            'remote_name' => $tmp[0],
-            'remote_url' => $tmp[1]
-        ];
-    }
 
     function getInsertionsDeletionsRatio($insertions, $deletions)
     {
@@ -431,5 +418,6 @@ class GetGitStats
     {
         return date("Y-m-d H:i:s");
     }
+
 
 }
