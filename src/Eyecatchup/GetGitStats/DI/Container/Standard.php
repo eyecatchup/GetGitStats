@@ -16,10 +16,10 @@
 namespace Eyecatchup\GetGitStats\DI\Container;
 
 
-use Eyecatchup\GetGitStats\DI\Container;
-use Eyecatchup\GetGitStats\Model\RepositoryModel;
+use Eyecatchup\GetGitStats\DI;
+use Eyecatchup\GetGitStats\Model;
 
-class Standard extends Container
+class Standard extends DI\Container
 {
     /**
      *  Sets the default properties.
@@ -29,30 +29,45 @@ class Standard extends Container
     public function __construct(array $properties = [])
     {
         $this->configure([
-            'log_since'  => 0,
-            'log_until'  => 0,
-            'log_author' => 0,
-            'local_path' => 0
+            'log_since'  => false,
+            'log_until'  => false,
+            'log_author' => false,
+            'local_path' => false
         ]);
 
         $this->configure($properties);
-        $this->setupRepo();
+        $this->setupRepositoryModel();
     }
 
     /**
      *  Set defaults for configurable properties.
      */
-    protected function setupRepo()
+    protected function setupRepositoryModel()
     {
         $this->configure([
-            'repoDefaults' => [
-                'since'  => $this->get('log_since'),
-                'until'  => $this->get('log_until'),
+            'repo_init_props' => [
+                'repo_name' => '',
+                'local_path' => $this->get('local_path'),
+                'remote_url' => '',
+                'remote_name' => '',
+                'log_since' => $this->get('log_since'),
+                'log_until' => $this->get('log_until'),
+                'log_created' => date('Y-m-d'),
+                'total' => [
+                    'commits' => 0,
+                    'commit_authors' => 0,
+                    'commit_days' => 0,
+                    'files_changed' => 0,
+                    'line_insertions' => 0,
+                    'line_deletions' => 0,
+                    'lines_net' => 0,
+                ],
                 'author' => $this->get('log_author'),
-                'path'   => $this->get('local_path')
+                'authors' => [],
+                'commits' => []
             ],
-            'repo' => Container::unique(function($C) {
-                return new RepositoryModel($C->get('repoDefaults'));
+            'repo' => DI\Container::unique(function($C) {
+                return new Model\RepositoryModel($C->get('repo_init_props'));
             })
         ]);
     }

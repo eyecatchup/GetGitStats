@@ -16,42 +16,47 @@
 namespace Eyecatchup\GetGitStats\Helper;
 
 
-use Eyecatchup\GetGitStats\Common\NoConfigurationException;
-use Eyecatchup\GetGitStats\Common\InvalidConfigurationException;
+use Eyecatchup\GetGitStats\Common\Exception as E;
 
 class Validator
 {
     /**
      * Validate the Dependency-Injection configuration array length.
      *
-     * @param array $array
+     * @param array $array Dependency-Injection configuration
+     * @param bool $acceptEmpty Allow empty DI configuration? (Used by main constructor.)
      *
      * @void
-     * @throws NoConfigurationException
-     * @throws InvalidConfigurationException
+     * @throws E\NoConfigurationException
+     * @throws E\InvalidConfigurationException
      */
-    public static function configLength(array $array)
+    public static function configLength(array $array, $acceptEmpty)
     {
-        if (0 === sizeof($array)) {
-            throw new NoConfigurationException(
+        if (4 < sizeof($array)) {
+            throw new E\InvalidConfigurationException(
+                'Invalid configuration; too many options. You cannot set more than 4 options.');
+        }
+        elseif (true !== $acceptEmpty && 0 === sizeof($array)) {
+            throw new E\NoConfigurationException(
                     "Missing configuration; the 'local_path' option is required / must be set." .
                     "See the `parse()` documentation for details.");
         }
-        elseif (4 < sizeof($array)) {
-            throw new InvalidConfigurationException(
-                    'Invalid configuration; too many options. You cannot set more than 4 options.');
-        }
+
+        return;
     }
 
     /**
      * Validate the Dependency-Injection configuration array contents.
      *
      * @param array $array Dependency-Injection configuration
+     * @param bool $acceptEmpty Allow empty DI configuration? (Used by main constructor.)
      *
      * @return array Validated Dependency-Injection configuration
      */
-    public static function config(array $array)
+    public static function config(array $array, $acceptEmpty = false)
     {
+        Validator::configLength($array, (bool) $acceptEmpty);
+
         $out = [];
 
         if (0 < sizeof($array)) {

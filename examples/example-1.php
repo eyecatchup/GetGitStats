@@ -19,15 +19,25 @@ use Eyecatchup\GetGitStats\GetGitStats as GitStats;
 
 try {
     $opts = [
-        'path' => [
-            realpath('C:\xampp\htdocs\repo_a')
-        ],
-        'log_since' => '1 Jan, 2016'
+        'local_path' => realpath('C:\xampp\htdocs\cobra_aw_template'),
+        'log_since' => '1 Jan, 2016',
     ];
 
     $gitstats = new GitStats($opts);
 
-    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $opts['since'], $opts['path'][0]);
+    header('Content-Type: text/plain');
+
+    /*$newOpts = [
+        'local_path' => realpath('C:\xampp\htdocs'),
+        'log_since' => '1 Jan, 2015',
+        'log_until' => '15 Jan, 2015'
+    ];
+
+    $gitstats->parse($newOpts);*/
+
+    print_r($gitstats->getRepositoryModel()); exit();
+
+    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $opts['log_since'], $opts['local_path'][0]);
 
     print $gitstats->getCommitsByWeekday() . PHP_EOL;
 }

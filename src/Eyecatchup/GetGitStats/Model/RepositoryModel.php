@@ -16,6 +16,8 @@
 namespace Eyecatchup\GetGitStats\Model;
 
 
+use Eyecatchup\GetGitStats\Helper\Git;
+
 class RepositoryModel
 {
     /**
@@ -23,13 +25,31 @@ class RepositoryModel
      *
      *	@var array
      */
-    protected $defaults = [];
+    protected $properties = null;
 
+    /**
+     * RepositoryModel constructor.
+     *
+     * @param array $properties
+     */
     public function __construct(array $properties)
     {
-        $this->setDefaults($properties);
+        $this->setProps($properties);
     }
 
+    /**
+     * @return mixed
+     */
+    public function getLocalPath()
+    {
+        return $this->properties['local_path'];
+    }
+
+    /**
+     * @param $data
+     *
+     * @return string
+     */
     public function commitsByAuthor($data)
     {
         $html = 'author';
@@ -42,11 +62,21 @@ class RepositoryModel
         return (string) $html;
     }
 
+    /**
+     * @param $data
+     *
+     * @return string
+     */
     public function commitsByDate($data)
     {
         return (string) 'date';
     }
 
+    /**
+     * @param $data
+     *
+     * @return string
+     */
     public function commitsByWeekday($data)
     {
         return (string) 'weekday';
@@ -57,13 +87,37 @@ class RepositoryModel
         return (string) '123';
     }
 
-    public function setDefaults(array $properties)
+    /**
+     * @param array $properties
+     */
+    private function setProps(array $properties)
     {
-        $this->defaults = $properties;
+        $this->properties = $properties;
+
+        if (false !== $this->getLocalPath() &&
+            is_string($this->getLocalPath()))
+        {
+            if (Git::isGitDir($this->getLocalPath())) {
+                $this->properties['commits'] = Git::parseGitlog(
+                    $this->getLocalPath(),
+                    $this->properties['log_since'],
+                    $this->properties['log_until'],
+                    $this->properties['author']
+                );
+            }
+        }
     }
 
-    public function getDefaults()
+    /**
+     * @return array
+     */
+    public function getProps()
     {
-        return $this->defaults;
+        return $this->properties;
+    }
+
+    private function reconstitute()
+    {
+
     }
 }

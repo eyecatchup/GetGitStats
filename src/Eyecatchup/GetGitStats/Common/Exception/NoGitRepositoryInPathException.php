@@ -13,20 +13,10 @@
  */
 
 
-namespace Eyecatchup\GetGitStats\Factory;
+namespace Eyecatchup\GetGitStats\Common\Exception;
 
 
-use Eyecatchup\GetGitStats\Model;
-
-class RepositoryFactory
+class NoGitRepositoryInPathException extends GetGitStatsException
 {
-    /**
-     * @param array $properties
-     *
-     * @return Model\RepositoryModel
-     */
-    public static function create(array $properties)
-    {
-        return new Model\RepositoryModel($properties);
-    }
+
 }

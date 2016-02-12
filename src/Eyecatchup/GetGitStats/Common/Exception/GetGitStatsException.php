@@ -13,10 +13,10 @@
  */
 
 
-namespace Eyecatchup\GetGitStats\Common;
+namespace Eyecatchup\GetGitStats\Common\Exception;
 
 
-class NoGitRepositoryInPathException extends GetGitStatsException
+class GetGitStatsException extends \Exception
 {
 
 }

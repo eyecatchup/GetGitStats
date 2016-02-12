@@ -13,7 +13,7 @@
  */
 
 
-namespace Eyecatchup\GetGitStats\Common;
+namespace Eyecatchup\GetGitStats\Common\Exception;
 
 
 class InvalidConfigurationException extends GetGitStatsException

@@ -16,44 +16,25 @@
 namespace Eyecatchup\GetGitStats\Helper;
 
 
-use Eyecatchup\GetGitStats\Common\NoGitRepositoryInPathException;
+use Eyecatchup\GetGitStats\Common\Exception as E;
 
 class System
 {
     /**
-     * Check if the given path points to a valid Git repository.
+     * Check if the given path points to a valid directory.
      *
      * @param string $path The local path to a Git repository
      *
      * @return bool
-     * @throws NoGitRepositoryInPathException
+     * @throws E\InvalidPathException
      */
-    public static function isGitDir($path)
+    public static function isDir($path)
     {
-        if (!file_exists(realpath($path . DIRECTORY_SEPARATOR . '.git' . DIRECTORY_SEPARATOR . 'config'))) {
-            throw new NoGitRepositoryInPathException(sprintf("No '.git' directory in path '%s'", $path));
+        if (!is_dir(realpath($path))) {
+            $msg = sprintf("Invalid path; directory '%s' does not exist.", $path);
+            throw new E\InvalidPathException($msg);
         }
 
         return true;
-    }
-
-    /**
-     * Get the remote URL of a Git repository.
-     *
-     * @param string $path The local path to a Git repository
-     *
-     * @return array Repo name, remote name and remote URL
-     */
-    public static function getGitRemote($path = '.')
-    {
-        $tty = shell_exec('cd ' . $path . ' && git remote -v |grep push |awk \'{printf "%s %s", $1, $2}\' -');
-        $tmp = explode(" ", $tty);
-        $tmp2 = explode("/", $tmp[1]);
-
-        return [
-            'repo_name' => end($tmp2),
-            'remote_name' => $tmp[0],
-            'remote_url' => $tmp[1]
-        ];
     }
 }

@@ -13,10 +13,10 @@
  */
 
 
-namespace Eyecatchup\GetGitStats\Common;
+namespace Eyecatchup\GetGitStats\Common\Exception;
 
 
-class GetGitStatsException extends \Exception
+class NoConfigurationException extends GetGitStatsException
 {
 
 }

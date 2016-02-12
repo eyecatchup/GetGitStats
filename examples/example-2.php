@@ -21,10 +21,8 @@ try {
     $gitstats = new GitStats;
 
     $opts = [
-        'path' => [
-             realpath('C:\xampp\htdocs\repo_a')
-        ],
-        'log_author' => 'Stephan Schmitz'
+        'local_path' => realpath('C:\xampp\htdocs\repo_a'),
+        'log_since' => '1 Jan, 2016'
     ];
 
     $gitstats->parse($opts);
@@ -34,18 +32,16 @@ try {
     #$gitstats->setOutput(new JsonOutput);
     #$gitstats->setOutput(new MarkdownOutput);
 
-    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $opts['since'], $opts['path'][0]);
+    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $opts['log_since'], $opts['local_path'][0]);
 
     print $gitstats->getCommitsByAuthor() . PHP_EOL;
     #print $gitstats->getCommitsByDate() . PHP_EOL;
     #print $gitstats->getCommitsByWeekday() . PHP_EOL;
 
     $newOpts = [
-        'path' => [
-             realpath('C:\xampp\htdocs\repo_b')
-        ],
-        'log_since' => '1 Jan, 2016',
-        'log_until' => '31 Jan, 2016'
+        'local_path' => realpath('C:\xampp\htdocs\repo_b'),
+        'log_since' => '1 Jan, 2015',
+        'log_until' => '15 Jan, 2015'
     ];
 
     $gitstats->parse($newOpts);
@@ -55,7 +51,7 @@ try {
     #$gitstats->setOutput(new JsonOutput);
     #$gitstats->setOutput(new MarkdownOutput);
 
-    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $newOpts['since'], $newOpts['path'][0]);
+    printf("##### Commits since %s in %s" . PHP_EOL . PHP_EOL, $newOpts['log_since'], $newOpts['local_path'][0]);
 
     print $gitstats->getCommitsByAuthor() . PHP_EOL;
     #print $gitstats->getCommitsByDate() . PHP_EOL;
